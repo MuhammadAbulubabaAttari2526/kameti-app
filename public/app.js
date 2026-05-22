@@ -221,7 +221,7 @@ function renderDashboard() {
   let html = `
   <div style="background:var(--accent-light);border:1px solid rgba(16,185,129,.25);border-radius:12px;padding:11px 14px;margin-bottom:14px;display:flex;align-items:center;gap:10px;font-size:13px;">
     <div class="pulse-dot"></div>
-    <div>Aktif Committees: <strong>${state.committees.length}</strong> — ${state.members.length} total members</div>
+    <div>Active Committees: <strong>${state.committees.length}</strong> — ${state.members.length} total members</div>
   </div>
   <div class="stats-grid">
     <div class="stat-card"><div class="stat-label"><i class="bi bi-people me-1"></i>Total Members</div><div class="stat-val c-text">${state.members.length}</div></div>
