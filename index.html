@@ -22,7 +22,36 @@
   </div>
   <div class="topbar-right">
     <button class="icon-btn" onclick="toggleTheme()" id="themeBtn"><i class="bi bi-moon-fill" id="themeIcon"></i></button>
-    <button class="btn-primary-custom" onclick="openModal('newKametiModal')"><i class="bi bi-plus-lg me-1"></i>Nayi Kameti</button>
+
+    <!-- USER AVATAR + DROPDOWN -->
+    <div class="user-menu-wrap" id="userMenuWrap">
+      <button class="user-avatar-btn" id="userAvatarBtn" onclick="toggleUserMenu()">
+        <div class="topbar-avatar" id="topbarAvatar">?</div>
+        <span class="topbar-username" id="topbarUserName">...</span>
+        <i class="bi bi-chevron-down" style="font-size:10px;color:var(--text3)"></i>
+      </button>
+      <div class="user-dropdown" id="userDropdown">
+        <div class="user-dropdown-header">
+          <div class="ud-avatar" id="udAvatar">?</div>
+          <div>
+            <div class="ud-name" id="udName">—</div>
+            <div class="ud-email" id="udEmail">—</div>
+          </div>
+        </div>
+        <div class="ud-divider"></div>
+        <button class="ud-item" onclick="openModal('newKametiModal');closeUserMenu()">
+          <i class="bi bi-plus-circle"></i> Nayi Kameti
+        </button>
+        <button class="ud-item" onclick="navigate('create');closeUserMenu()">
+          <i class="bi bi-grid"></i> Create Menu
+        </button>
+        <div class="ud-divider"></div>
+        <button class="ud-item ud-logout" onclick="handleLogout()">
+          <i class="bi bi-box-arrow-right"></i> Logout Karein
+        </button>
+      </div>
+    </div>
+
     <button class="btn-qa-topbar" onclick="openModal('quranAndaziModal')" title="Quran Andazi"><i class="bi bi-shuffle"></i></button>
   </div>
 </div>
@@ -193,25 +222,35 @@
       <label class="form-label">Draw Mein Shamil Members</label>
       <div id="qaEligibleInfo" style="font-size:12px;color:var(--text3);margin-top:4px;"></div>
     </div>
-
-    <!-- Draw Area -->
     <div class="qa-draw-area" id="qaDrawArea">
       <div class="qa-cards-wrap" id="qaCardsWrap"></div>
       <button class="qa-draw-btn" id="qaDrawBtn" onclick="startQuranAndazi()">
         <i class="bi bi-shuffle me-2"></i>Draw Karein
       </button>
     </div>
-
-    <!-- Result -->
     <div class="qa-result" id="qaResult" style="display:none"></div>
-
     <div style="font-size:10px;color:var(--text3);text-align:center;margin-top:12px;">
       <i class="bi bi-info-circle me-1"></i>Sirf eligible members (jo pehle winner nahi ban chuke) draw mein shamil honge
     </div>
   </div>
 </div>
 
+<!-- MODAL: LOGOUT CONFIRM -->
+<div class="modal-overlay" id="logoutModal" onclick="closeModalOutside(event,'logoutModal')">
+  <div class="modal-sheet" onclick="event.stopPropagation()" style="padding-bottom:28px;">
+    <div class="modal-handle"></div>
+    <div class="modal-title" style="text-align:center;margin-top:8px;">Logout Karein? 👋</div>
+    <p style="text-align:center;color:var(--text3);font-size:13px;margin-bottom:20px;">Aap apne account se logout ho jayenge</p>
+    <div style="display:flex;gap:10px;">
+      <button class="btn-ghost" style="flex:1;" onclick="closeModal('logoutModal')">Wapas Jao</button>
+      <button class="btn-danger-ghost" style="flex:1;" onclick="confirmLogout()">
+        <i class="bi bi-box-arrow-right me-1"></i>Logout
+      </button>
+    </div>
+  </div>
+</div>
+
 <div class="toast-container" id="toastContainer"></div>
-<script src="./app.js"></script>
+<script type="module" src="./app.js"></script>
 </body>
 </html>
