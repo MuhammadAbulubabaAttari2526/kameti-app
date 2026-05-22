@@ -776,3 +776,26 @@ window.startQuranAndazi = startQuranAndazi;
 // ─────────────────────────────────────────────────────────────────────────────
 document.getElementById('nkDate').value  = today();
 document.getElementById('payDate').value = today();
+onAuthStateChanged(auth, (user) => {
+  console.log("AUTH USER:", user);
+});
+onAuthStateChanged(auth, (user) => {
+  if (user) {
+    console.log("READY USER:", user.uid);
+  }
+});
+onAuthStateChanged(auth, async (user) => {
+  if (!user) {
+    window.location.href = './auth.html';
+    return;
+  }
+
+  currentUser = user;
+
+  console.log("LOGGED IN:", currentUser.uid);
+
+  await loadStateFromFirestore();
+  populateKametiDropdowns();
+  renderDashboard();
+  updateTopbarUser();
+});
