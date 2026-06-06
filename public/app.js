@@ -32,6 +32,31 @@ const db          = getFirestore(firebaseApp);
 let currentUser = null;
 
 // ── Auth Guard ────────────────────────────────────────────────────────────────
+// ─────────────────────────────────────────────────────────────────────────────
+// SPLASH SCREEN
+// ─────────────────────────────────────────────────────────────────────────────
+function setSplashStatus(msg, pct) {
+  const statusEl = document.getElementById('splashStatus');
+  const fillEl   = document.getElementById('splashBarFill');
+  if (statusEl) statusEl.textContent = msg;
+  if (fillEl)   fillEl.style.width   = pct + '%';
+}
+
+function hideSplash() {
+  const splash = document.getElementById('splashScreen');
+  const app    = document.getElementById('app');
+  if (!splash) return;
+  setSplashStatus('Ready!', 100);
+  setTimeout(() => {
+    splash.classList.add('splash-hide');
+    if (app) app.style.opacity = '1';
+    setTimeout(() => splash.remove(), 600);
+  }, 400);
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// AUTH GUARD
+// ─────────────────────────────────────────────────────────────────────────────
 onAuthStateChanged(auth, async (user) => {
   if (!user) {
     window.location.href = './auth.html';
@@ -39,10 +64,22 @@ onAuthStateChanged(auth, async (user) => {
   }
   currentUser = user;
   console.log(`✅ Logged in as: ${user.email}`);
+
+  setSplashStatus('User verified ✓', 30);
+  await new Promise(r => setTimeout(r, 200));
+
+  setSplashStatus('Loading your data...', 55);
   await loadStateFromFirestore();
+
+  setSplashStatus('Setting up committees...', 80);
+  await new Promise(r => setTimeout(r, 150));
+
   populateKametiDropdowns();
   renderDashboard();
-  updateTopbarUser();   // ← Topbar update karo
+  updateTopbarUser();
+  if (typeof window.applyLang === 'function') window.applyLang();
+
+  hideSplash();
 });
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -202,12 +239,18 @@ window.navigate = navigate;
 // ─────────────────────────────────────────────────────────────────────────────
 // THEME
 // ─────────────────────────────────────────────────────────────────────────────
-let isDark = true;
+let isDark = localStorage.getItem('kametiTheme') !== 'light';
+// Apply saved theme immediately
+document.documentElement.setAttribute('data-theme', isDark ? 'dark' : 'light');
+
 function toggleTheme() {
   isDark = !isDark;
   document.documentElement.setAttribute('data-theme', isDark ? 'dark' : 'light');
+  localStorage.setItem('kametiTheme', isDark ? 'dark' : 'light');
   document.getElementById('themeIcon').className = isDark ? 'bi bi-moon-fill' : 'bi bi-sun-fill';
-  showToast(isDark ? 'Dark mode on 🌙' : 'Light mode on ☀️', '');
+  const icon = document.getElementById('themeIcon');
+  if (icon) icon.className = isDark ? 'bi bi-moon-fill' : 'bi bi-sun-fill';
+  showToast(isDark ? t('dark_mode') : t('light_mode'), '');
 }
 window.toggleTheme = toggleTheme;
 
@@ -221,13 +264,13 @@ function renderDashboard() {
   let html = `
   <div style="background:var(--accent-light);border:1px solid rgba(16,185,129,.25);border-radius:12px;padding:11px 14px;margin-bottom:14px;display:flex;align-items:center;gap:10px;font-size:13px;">
     <div class="pulse-dot"></div>
-    <div>Active Committees: <strong>${state.committees.length}</strong> — ${state.members.length} total members</div>
+    <div>${t('active_committees')}: <strong>${state.committees.length}</strong> — ${state.members.length} ${t('total_members_lbl').toLowerCase()}</div>
   </div>
   <div class="stats-grid">
-    <div class="stat-card"><div class="stat-label"><i class="bi bi-people me-1"></i>Total Members</div><div class="stat-val c-text">${state.members.length}</div></div>
-    <div class="stat-card"><div class="stat-label"><i class="bi bi-collection me-1"></i>Collected</div><div class="stat-val c-green">${formatRs(totalCollected)}</div></div>
-    <div class="stat-card"><div class="stat-label"><i class="bi bi-hourglass me-1"></i>Pending</div><div class="stat-val c-warn">${formatRs(totalPending)}</div></div>
-    <div class="stat-card"><div class="stat-label"><i class="bi bi-journal-check me-1"></i>Payments</div><div class="stat-val c-text">${state.payments.filter(p => p.type === 'paid').length}/${state.payments.length}</div></div>
+    <div class="stat-card"><div class="stat-label"><i class="bi bi-people me-1"></i>${t('total_members_lbl')}</div><div class="stat-val c-text">${state.members.length}</div></div>
+    <div class="stat-card"><div class="stat-label"><i class="bi bi-collection me-1"></i>${t('collected_lbl')}</div><div class="stat-val c-green">${formatRs(totalCollected)}</div></div>
+    <div class="stat-card"><div class="stat-label"><i class="bi bi-hourglass me-1"></i>${t('pending_lbl')}</div><div class="stat-val c-warn">${formatRs(totalPending)}</div></div>
+    <div class="stat-card"><div class="stat-label"><i class="bi bi-journal-check me-1"></i>${t('payments_lbl')}</div><div class="stat-val c-text">${state.payments.filter(p => p.type === 'paid').length}/${state.payments.length}</div></div>
   </div>`;
 
   state.committees.forEach(c => {
@@ -236,44 +279,44 @@ function renderDashboard() {
     const pct      = members.length ? Math.round((paid / members.length) * 100) : 0;
     const collected = state.payments.filter(p => p.committeeId === c.id && p.type === 'paid').reduce((s, p) => s + p.amount, 0);
     const fillClass = pct < 50 ? 'warn-fill' : '';
-    const badgeMonths = `Month ${c.currentMonth}/${c.totalMembers}`;
+    const badgeMonths = `${t('month_prefix')} ${c.currentMonth}/${c.totalMembers}`;
 
     html += `<div class="committee-card">
       <div class="comm-head">
         <div>
           <div class="comm-title" style="cursor:pointer" onclick="openKametiDetail(${c.id})">${c.name}</div>
-          <div class="comm-meta">Monthly · ${formatRs(c.monthlyAmount)}/member · ${c.totalMembers} members</div>
+          <div class="comm-meta">${t('monthly')} · ${formatRs(c.monthlyAmount)}/member · ${c.totalMembers} members</div>
         </div>
         <span class="badge badge-month">${badgeMonths}</span>
       </div>
       <div class="prog-wrap">
         <div class="prog-bg"><div class="prog-fill ${fillClass}" style="width:${pct}%"></div></div>
-        <div class="prog-meta"><span>${formatRs(collected)} collected</span><span>${pct}% paid</span></div>
+        <div class="prog-meta"><span>${formatRs(collected)} ${t('collected_suffix')}</span><span>${pct}${t('paid_suffix')}</span></div>
       </div>
-      <div class="divider"></div>
-      <div class="sec-label">Is month ki collection</div>`;
+      <div class="app-divider"></div>
+      <div class="sec-label">${t('payment_log')}</div>`;
 
     members.forEach(m => {
       const statusIcon  = m.status === 'paid' ? 'bi-check-circle-fill' : m.status === 'late' ? 'bi-x-circle-fill' : 'bi-hourglass-split';
       const statusClass = m.status === 'paid' ? 's-paid' : m.status === 'late' ? 's-late' : 's-pending';
-      const statusText  = m.status === 'paid' ? `Paid · ${formatRs(c.monthlyAmount)}` : m.status === 'late' ? 'Late — Fine Applied' : 'Pending';
+      const statusText  = m.status === 'paid' ? `${t('paid_status')} · ${formatRs(c.monthlyAmount)}` : m.status === 'late' ? t('late_status') : t('pending_status');
       html += `<div class="member-row">
         <div class="mem-left">
           <div class="mem-avatar" style="background:${colorForMember(m)}">${initials(m.name)}</div>
-          <div><div class="mem-name">${m.name}</div><div class="mem-sub">Member #${m.turn}</div></div>
+          <div><div class="mem-name">${m.name}</div><div class="mem-sub">${t('member_hash')}${m.turn}</div></div>
         </div>
         <span class="mem-status ${statusClass}" onclick="openMemberDetail(${m.id})"><i class="bi ${statusIcon} me-1"></i>${statusText}</span>
       </div>`;
     });
 
     html += `<div class="action-row">
-      <button class="btn-ghost" onclick="navigate('payments')"><i class="bi bi-journal-text me-1"></i>Payment Log</button>
-      <button class="btn-ghost" onclick="openKametiDetail(${c.id})"><i class="bi bi-info-circle me-1"></i>Details</button>
+      <button class="btn-ghost" onclick="navigate('payments')"><i class="bi bi-journal-text me-1"></i>${t('payment_log')}</button>
+      <button class="btn-ghost" onclick="openKametiDetail(${c.id})"><i class="bi bi-info-circle me-1"></i>${t('details')}</button>
     </div></div>`;
   });
 
   if (state.committees.length === 0) {
-    html += `<div class="empty-state"><i class="bi bi-people"></i><p>Koi committee nahi. Nayi kameti banayein!</p></div>`;
+    html += `<div class="empty-state"><i class="bi bi-people"></i><p>${t('no_committee')}</p></div>`;
   }
 
   document.getElementById('dashboardContent').innerHTML = html;
@@ -300,7 +343,7 @@ function renderMembers() {
   });
 
   if (filtered.length === 0) {
-    document.getElementById('memberList').innerHTML = `<div class="empty-state"><i class="bi bi-person-x"></i><p>Koi member nahi mila</p></div>`;
+    document.getElementById('memberList').innerHTML = `<div class="empty-state"><i class="bi bi-person-x"></i><p>${t('no_member_found')}</p></div>`;
     return;
   }
 
@@ -308,12 +351,12 @@ function renderMembers() {
     const c = getCommittee(m.committeeId);
     const badgeClass = m.status === 'paid' ? 'badge-active' : m.status === 'late' ? '' : 'badge-month';
     const badgeStyle = m.status === 'late' ? 'background:rgba(239,68,68,.1);color:#ef4444;border:1px solid rgba(239,68,68,.2)' : '';
-    const statusLabel = m.status.charAt(0).toUpperCase() + m.status.slice(1);
+    const statusLabel = m.status === 'paid' ? t('paid_status') : m.status === 'late' ? 'Late' : t('pending_status');
     return `<div class="member-card" onclick="openMemberDetail(${m.id})">
       <div class="mc-avatar" style="background:${colorForMember(m)}">${initials(m.name)}</div>
       <div class="mc-info">
         <div class="mc-name">${m.name}</div>
-        <div class="mc-sub">Member #${m.turn} · ${c?.name || '—'}</div>
+        <div class="mc-sub">${t('member_hash')}${m.turn} · ${c?.name || '—'}</div>
       </div>
       <span class="mc-badge ${badgeClass}" style="${badgeStyle}">${statusLabel}</span>
     </div>`;
@@ -337,7 +380,7 @@ function renderPayments() {
   const filtered = state.payments.filter(p => f === 'all' || p.type === f);
 
   if (filtered.length === 0) {
-    document.getElementById('paymentList').innerHTML = `<div class="empty-state"><i class="bi bi-cash-stack"></i><p>Koi payment record nahi</p></div>`;
+    document.getElementById('paymentList').innerHTML = `<div class="empty-state"><i class="bi bi-cash-stack"></i><p>${t('no_payments')}</p></div>`;
     return;
   }
 
@@ -421,8 +464,8 @@ function openMemberDetail(memberId) {
       </div>
     </div>
     <div style="background:var(--card2);border-radius:12px;padding:12px;margin-bottom:14px;">
-      <div style="font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px;">Payment History</div>
-      ${payments.length === 0 ? '<p style="font-size:12px;color:var(--text3)">Koi payment nahi</p>' :
+      <div style="font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px;">${t('payments_history')}</div>
+      ${payments.length === 0 ? `<p style="font-size:12px;color:var(--text3)">${t('no_payments')}</p>` :
         payments.map(p => `
           <div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid var(--border);font-size:12px;">
             <span>${p.date}</span>
@@ -466,16 +509,16 @@ function openKametiDetail(committeeId) {
   document.getElementById('kdTitle').textContent = c.name;
   document.getElementById('kdBody').innerHTML = `
     <div style="background:var(--card2);border-radius:12px;padding:14px;margin-bottom:14px;">
-      <div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--border)"><span style="font-size:12px;color:var(--text2)">Total Members</span><span style="font-size:12px;font-weight:600">${c.totalMembers}</span></div>
-      <div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--border)"><span style="font-size:12px;color:var(--text2)">Monthly Amount</span><span style="font-size:12px;font-weight:600">${formatRs(c.monthlyAmount)}</span></div>
-      <div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--border)"><span style="font-size:12px;color:var(--text2)">Start Date</span><span style="font-size:12px;font-weight:600">${c.startDate}</span></div>
-      <div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--border)"><span style="font-size:12px;color:var(--text2)">Current Month</span><span style="font-size:12px;font-weight:600">${c.currentMonth}/${c.totalMembers}</span></div>
-      <div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--border)"><span style="font-size:12px;color:var(--text2)">Paid This Month</span><span style="font-size:12px;font-weight:600;color:var(--accent)">${paid}/${members.length}</span></div>
-      <div style="display:flex;justify-content:space-between;padding:8px 0"><span style="font-size:12px;color:var(--text2)">Total Collected</span><span style="font-size:12px;font-weight:600;color:var(--accent)">${formatRs(totalCollected)}</span></div>
+      <div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--border)"><span style="font-size:12px;color:var(--text2)">${t('total_members_d')}</span><span style="font-size:12px;font-weight:600">${c.totalMembers}</span></div>
+      <div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--border)"><span style="font-size:12px;color:var(--text2)">${t('monthly_amount_d')}</span><span style="font-size:12px;font-weight:600">${formatRs(c.monthlyAmount)}</span></div>
+      <div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--border)"><span style="font-size:12px;color:var(--text2)">${t('start_date_d')}</span><span style="font-size:12px;font-weight:600">${c.startDate}</span></div>
+      <div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--border)"><span style="font-size:12px;color:var(--text2)">${t('current_month_d')}</span><span style="font-size:12px;font-weight:600">${c.currentMonth}/${c.totalMembers}</span></div>
+      <div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--border)"><span style="font-size:12px;color:var(--text2)">${t('paid_this_month_d')}</span><span style="font-size:12px;font-weight:600;color:var(--accent)">${paid}/${members.length}</span></div>
+      <div style="display:flex;justify-content:space-between;padding:8px 0"><span style="font-size:12px;color:var(--text2)">${t('total_collected_d')}</span><span style="font-size:12px;font-weight:600;color:var(--accent)">${formatRs(totalCollected)}</span></div>
     </div>
     <div style="display:flex;gap:8px;">
-      <button class="btn-ghost" style="flex:1" onclick="closeModal('kametiDetailModal');openModal('addMemberModal');setTimeout(()=>{document.getElementById('nmKameti').value='${c.id}'},100)"><i class="bi bi-person-plus me-1"></i>Add Member</button>
-      <button class="btn-danger-ghost" style="flex:1" onclick="deleteKameti(${committeeId})"><i class="bi bi-trash me-1"></i>Delete</button>
+      <button class="btn-ghost" style="flex:1" onclick="closeModal('kametiDetailModal');openModal('addMemberModal');setTimeout(()=>{document.getElementById('nmKameti').value='${c.id}'},100)"><i class="bi bi-person-plus me-1"></i>${t('btn_add_member_d')}</button>
+      <button class="btn-danger-ghost" style="flex:1" onclick="deleteKameti(${committeeId})"><i class="bi bi-trash me-1"></i>${t('btn_delete')}</button>
     </div>`;
   openModal('kametiDetailModal');
 }
@@ -576,6 +619,26 @@ function recordPayment() {
   if (existing) { existing.type = 'paid'; existing.amount = amount; existing.date = date || today(); existing.notes = notes; }
   else          { state.payments.push({ id: state.nextId.payment++, memberId, committeeId, amount, date: date || today(), type: 'paid', notes }); }
   m.status = 'paid';
+
+  // Check karo ke is committee ke sab members paid ho gaye — agar haan toh month increment karo
+  const committee = getCommittee(committeeId);
+  const allMembers = state.members.filter(mem => mem.committeeId === committeeId);
+  const allPaid = allMembers.every(mem => mem.status === 'paid');
+  if (allPaid && committee) {
+    committee.currentMonth = Math.min((committee.currentMonth || 1) + 1, committee.totalMembers);
+    // Agले month ke liye sab members reset karo pending par
+    allMembers.forEach(mem => { mem.status = 'pending'; });
+    state.payments.push(...allMembers.map(mem => ({
+      id: state.nextId.payment++,
+      memberId: mem.id,
+      committeeId,
+      amount: committee.monthlyAmount,
+      date: today(),
+      type: 'pending',
+      notes: ''
+    })));
+    showToast(`🎉 ${committee.name} — Month ${committee.currentMonth - 1} complete! Naya maah shuru ho gaya.`, '');
+  }
 
   closeModal('recordPaymentModal');
   document.getElementById('payAmount').value = '';
@@ -687,13 +750,13 @@ function populateQaMembers() {
 
   const wrap = document.getElementById('qaCardsWrap');
   wrap.innerHTML = eligible.length === 0
-    ? `<div style="color:var(--text3);font-size:12px;padding:10px">Tamam members draw ho chuke hain.</div>`
+    ? `<div style="color:var(--text3);font-size:12px;padding:10px">${t('qa_all_done')}</div>`
     : eligible.map(m => `<div class="qa-card" id="qacard-${m.id}" title="${m.name}">${initials(m.name)}</div>`).join('');
 
   document.getElementById('qaResult').style.display = 'none';
   const btn = document.getElementById('qaDrawBtn');
   btn.disabled = eligible.length === 0;
-  btn.innerHTML = eligible.length === 0 ? 'Koi eligible member nahi' : '<i class="bi bi-shuffle me-2"></i>Draw Karein';
+  btn.innerHTML = eligible.length === 0 ? t('qa_none_eligible') : `<i class="bi bi-shuffle me-2"></i>${t('btn_draw')}`;
 }
 window.populateQaMembers = populateQaMembers;
 
@@ -711,7 +774,7 @@ function startQuranAndazi() {
 
   const btn = document.getElementById('qaDrawBtn');
   btn.disabled = true;
-  btn.innerHTML = '<i class="bi bi-hourglass-split me-2"></i>Draw ho raha hai...';
+  btn.innerHTML = `<i class="bi bi-hourglass-split me-2"></i>${t('btn_drawing')}`;
 
   const cards = document.querySelectorAll('.qa-card');
   cards.forEach(card => card.classList.add('spinning'));
@@ -749,13 +812,13 @@ function startQuranAndazi() {
         resultEl.style.display = 'block';
         resultEl.innerHTML = `
           <span class="qa-result-crown">🏆</span>
-          <div class="qa-result-label">Is Maah Ka Winner</div>
+          <div class="qa-result-label">${t('qa_winner_label')}</div>
           <div class="qa-result-name">${winner.name}</div>
-          <div class="qa-result-sub">${c.name} · Member #${winner.turn}</div>
+          <div class="qa-result-sub">${c.name} · ${t('member_hash')}${winner.turn}</div>
           <div class="qa-result-turn">Draw #${c.winnersHistory.length}</div>
           ${c.winnersHistory.length > 1 ? `
           <div class="qa-history">
-            <div style="font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px">Pichle Winners</div>
+            <div style="font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px">${t('qa_prev_winners')}</div>
             ${[...c.winnersHistory].reverse().slice(1).map(w =>
               `<div class="qa-history-item"><span>${w.name}</span><span>Draw #${w.turn} · ${w.date}</span></div>`
             ).join('')}
@@ -763,7 +826,7 @@ function startQuranAndazi() {
 
         showToast(`🎉 ${winner.name} is maah ka winner! Mubarak!`, '');
         btn.disabled = false;
-        btn.innerHTML = '<i class="bi bi-arrow-repeat me-2"></i>Dubara Draw Karein';
+        btn.innerHTML = `<i class="bi bi-arrow-repeat me-2"></i>${t('btn_redraw')}`;
         populateQaMembers();
       }, 300);
     }
@@ -776,26 +839,3 @@ window.startQuranAndazi = startQuranAndazi;
 // ─────────────────────────────────────────────────────────────────────────────
 document.getElementById('nkDate').value  = today();
 document.getElementById('payDate').value = today();
-onAuthStateChanged(auth, (user) => {
-  console.log("AUTH USER:", user);
-});
-onAuthStateChanged(auth, (user) => {
-  if (user) {
-    console.log("READY USER:", user.uid);
-  }
-});
-onAuthStateChanged(auth, async (user) => {
-  if (!user) {
-    window.location.href = './auth.html';
-    return;
-  }
-
-  currentUser = user;
-
-  console.log("LOGGED IN:", currentUser.uid);
-
-  await loadStateFromFirestore();
-  populateKametiDropdowns();
-  renderDashboard();
-  updateTopbarUser();
-});

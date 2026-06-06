@@ -7,20 +7,88 @@
 <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-icons/1.11.3/font/bootstrap-icons.min.css" rel="stylesheet"/>
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet"/>
 <link rel="stylesheet" href="./style.css">
+<style>
+  .lang-toggle {
+    display: flex;
+    align-items: center;
+    background: var(--card);
+    border: 1.5px solid var(--border);
+    border-radius: 20px;
+    padding: 2px 4px;
+    gap: 2px;
+  }
+  .lang-toggle button {
+    background: none;
+    border: none;
+    cursor: pointer;
+    font-size: 11px;
+    font-weight: 600;
+    padding: 3px 8px;
+    border-radius: 16px;
+    color: var(--text3);
+    transition: all .2s;
+    letter-spacing: .3px;
+  }
+  .lang-toggle button.lang-active {
+    background: var(--accent);
+    color: #fff;
+  }
+</style>
 </head>
 <body>
-<div class="app" id="app">
+
+<!-- ═══ SPLASH / LOADING SCREEN ═══ -->
+<div id="splashScreen">
+  <div class="splash-bg-orb splash-orb-1"></div>
+  <div class="splash-bg-orb splash-orb-2"></div>
+
+  <div class="splash-content">
+    <div class="splash-logo-wrap">
+      <div class="splash-logo" id="splashLogo">K</div>
+      <div class="splash-rings">
+        <div class="splash-ring r1"></div>
+        <div class="splash-ring r2"></div>
+        <div class="splash-ring r3"></div>
+      </div>
+    </div>
+
+    <div class="splash-text-wrap">
+      <div class="splash-brand">KametiApp</div>
+      <div class="splash-tagline">Digital Committee System</div>
+    </div>
+
+    <div class="splash-loader">
+      <div class="splash-bar">
+        <div class="splash-bar-fill" id="splashBarFill"></div>
+      </div>
+      <div class="splash-status" id="splashStatus">Connecting...</div>
+    </div>
+
+    <div class="splash-dots">
+      <div class="splash-dot"></div>
+      <div class="splash-dot"></div>
+      <div class="splash-dot"></div>
+    </div>
+  </div>
+</div>
+<!-- ═══ END SPLASH ═══ -->
+
+<div class="app" id="app" style="opacity:0;transition:opacity .4s ease;">
 
 <!-- TOPBAR -->
 <div class="topbar">
   <div style="display:flex;align-items:center;gap:8px;">
     <div class="logo">K</div>
     <div class="brand" style="margin-left:4px;">
-      <h6>KametiApp</h6>
-      <span>Digital Committee System</span>
+      <h6 data-i18n="brand_name">KametiApp</h6>
+      <span data-i18n="brand_tagline">Digital Committee System</span>
     </div>
   </div>
   <div class="topbar-right">
+    <div class="lang-toggle">
+      <button id="langBtnUR" onclick="setLang('ur')" class="lang-active">UR</button>
+      <button id="langBtnEN" onclick="setLang('en')">EN</button>
+    </div>
     <button class="icon-btn" onclick="toggleTheme()" id="themeBtn"><i class="bi bi-moon-fill" id="themeIcon"></i></button>
 
     <!-- USER AVATAR + DROPDOWN -->
@@ -40,14 +108,14 @@
         </div>
         <div class="ud-divider"></div>
         <button class="ud-item" onclick="openModal('newKametiModal');closeUserMenu()">
-          <i class="bi bi-plus-circle"></i> Nayi Kameti
+          <i class="bi bi-plus-circle"></i> <span data-i18n="dd_new_kameti">Nayi Kameti</span>
         </button>
         <button class="ud-item" onclick="navigate('create');closeUserMenu()">
-          <i class="bi bi-grid"></i> Create Menu
+          <i class="bi bi-grid"></i> <span data-i18n="dd_create_menu">Create Menu</span>
         </button>
         <div class="ud-divider"></div>
         <button class="ud-item ud-logout" onclick="handleLogout()">
-          <i class="bi bi-box-arrow-right"></i> Logout Karein
+          <i class="bi bi-box-arrow-right"></i> <span data-i18n="dd_logout">Logout Karein</span>
         </button>
       </div>
     </div>
@@ -63,58 +131,79 @@
 
 <!-- PAGE: MEMBERS -->
 <div class="page" id="page-members">
-  <div class="section-title">Members <a onclick="openModal('addMemberModal')"><i class="bi bi-plus-circle me-1"></i>Add</a></div>
+  <div class="section-title">
+    <span data-i18n="section_members">Members</span>
+    <a onclick="openModal('addMemberModal')"><i class="bi bi-plus-circle me-1"></i><span data-i18n="add">Add</span></a>
+  </div>
   <div class="search-bar">
     <i class="bi bi-search"></i>
-    <input type="text" placeholder="Member ka naam dhundein..." id="memberSearch" oninput="renderMembers()"/>
+    <input type="text" data-i18n-ph="search_member" placeholder="Member ka naam dhundein..." id="memberSearch" oninput="renderMembers()"/>
   </div>
   <div class="chip-row" id="memberChips">
-    <div class="chip active" onclick="setMemberFilter('all',this)">All</div>
-    <div class="chip" onclick="setMemberFilter('paid',this)">Paid</div>
-    <div class="chip" onclick="setMemberFilter('pending',this)">Pending</div>
-    <div class="chip" onclick="setMemberFilter('late',this)">Late</div>
+    <div class="chip active" onclick="setMemberFilter('all',this)" data-i18n="chip_all">All</div>
+    <div class="chip" onclick="setMemberFilter('paid',this)" data-i18n="chip_paid">Paid</div>
+    <div class="chip" onclick="setMemberFilter('pending',this)" data-i18n="chip_pending">Pending</div>
+    <div class="chip" onclick="setMemberFilter('late',this)" data-i18n="chip_late">Late</div>
   </div>
   <div id="memberList"></div>
 </div>
 
 <!-- PAGE: PAYMENTS -->
 <div class="page" id="page-payments">
-  <div class="section-title">Payments <a onclick="openModal('recordPaymentModal')"><i class="bi bi-plus-circle me-1"></i>Record</a></div>
+  <div class="section-title">
+    <span data-i18n="section_payments">Payments</span>
+    <a onclick="openModal('recordPaymentModal')"><i class="bi bi-plus-circle me-1"></i><span data-i18n="record">Record</span></a>
+  </div>
   <div class="chip-row" id="payChips">
-    <div class="chip active" onclick="setPayFilter('all',this)">All</div>
-    <div class="chip" onclick="setPayFilter('paid',this)">Paid</div>
-    <div class="chip" onclick="setPayFilter('pending',this)">Pending</div>
-    <div class="chip" onclick="setPayFilter('late',this)">Late</div>
+    <div class="chip active" onclick="setPayFilter('all',this)" data-i18n="chip_all">All</div>
+    <div class="chip" onclick="setPayFilter('paid',this)" data-i18n="chip_paid">Paid</div>
+    <div class="chip" onclick="setPayFilter('pending',this)" data-i18n="chip_pending">Pending</div>
+    <div class="chip" onclick="setPayFilter('late',this)" data-i18n="chip_late">Late</div>
   </div>
   <div id="paymentList"></div>
 </div>
 
 <!-- PAGE: CREATE -->
 <div class="page" id="page-create">
-  <div class="section-title">Create New</div>
+  <div class="section-title" data-i18n="section_create">Create New</div>
   <div class="create-option" onclick="openModal('newKametiModal')">
     <div class="create-icon"><i class="bi bi-people-fill"></i></div>
-    <div class="create-info"><h6>Nayi Kameti Banayein</h6><p>Naya committee group setup karein</p></div>
+    <div class="create-info">
+      <h6 data-i18n="create_kameti_title">Nayi Kameti Banayein</h6>
+      <p data-i18n="create_kameti_sub">Naya committee group setup karein</p>
+    </div>
     <i class="bi bi-chevron-right" style="color:var(--text3)"></i>
   </div>
   <div class="create-option" onclick="openModal('addMemberModal')">
     <div class="create-icon"><i class="bi bi-person-plus-fill"></i></div>
-    <div class="create-info"><h6>Member Add Karein</h6><p>Existing committee mein naya member add karein</p></div>
+    <div class="create-info">
+      <h6 data-i18n="create_member_title">Member Add Karein</h6>
+      <p data-i18n="create_member_sub">Existing committee mein naya member add karein</p>
+    </div>
     <i class="bi bi-chevron-right" style="color:var(--text3)"></i>
   </div>
   <div class="create-option" onclick="openModal('recordPaymentModal')">
     <div class="create-icon"><i class="bi bi-cash-stack"></i></div>
-    <div class="create-info"><h6>Payment Record Karein</h6><p>Member ka payment manually record karein</p></div>
+    <div class="create-info">
+      <h6 data-i18n="create_payment_title">Payment Record Karein</h6>
+      <p data-i18n="create_payment_sub">Member ka payment manually record karein</p>
+    </div>
     <i class="bi bi-chevron-right" style="color:var(--text3)"></i>
   </div>
   <div class="create-option" onclick="openModal('fineModal')">
     <div class="create-icon"><i class="bi bi-exclamation-triangle-fill"></i></div>
-    <div class="create-info"><h6>Fine Lagayein</h6><p>Late payment par member ko fine apply karein</p></div>
+    <div class="create-info">
+      <h6 data-i18n="create_fine_title">Fine Lagayein</h6>
+      <p data-i18n="create_fine_sub">Late payment par member ko fine apply karein</p>
+    </div>
     <i class="bi bi-chevron-right" style="color:var(--text3)"></i>
   </div>
   <div class="create-option" onclick="openModal('quranAndaziModal')">
     <div class="create-icon" style="background:rgba(139,92,246,.15);color:#8b5cf6"><i class="bi bi-shuffle"></i></div>
-    <div class="create-info"><h6>Quran Andazi</h6><p>Random draw se is maah ka winner nikaalo</p></div>
+    <div class="create-info">
+      <h6 data-i18n="create_qa_title">Quran Andazi</h6>
+      <p data-i18n="create_qa_sub">Random draw se is maah ka winner nikaalo</p>
+    </div>
     <i class="bi bi-chevron-right" style="color:var(--text3)"></i>
   </div>
 </div>
@@ -123,10 +212,10 @@
 
 <!-- BOTTOM NAV -->
 <nav class="bottom-nav">
-  <button class="nav-item active" onclick="navigate('dashboard')" id="nav-dashboard"><i class="bi bi-house-fill"></i><span>Dashboard</span></button>
-  <button class="nav-item" onclick="navigate('members')" id="nav-members"><i class="bi bi-people-fill"></i><span>Members</span></button>
-  <button class="nav-item" onclick="navigate('payments')" id="nav-payments"><i class="bi bi-cash-coin"></i><span>Payments</span></button>
-  <button class="nav-item" onclick="navigate('create')" id="nav-create"><i class="bi bi-plus-circle-fill"></i><span>Create</span></button>
+  <button class="nav-item active" onclick="navigate('dashboard')" id="nav-dashboard"><i class="bi bi-house-fill"></i><span data-i18n="nav_dashboard">Dashboard</span></button>
+  <button class="nav-item" onclick="navigate('members')" id="nav-members"><i class="bi bi-people-fill"></i><span data-i18n="nav_members">Members</span></button>
+  <button class="nav-item" onclick="navigate('payments')" id="nav-payments"><i class="bi bi-cash-coin"></i><span data-i18n="nav_payments">Payments</span></button>
+  <button class="nav-item" onclick="navigate('create')" id="nav-create"><i class="bi bi-plus-circle-fill"></i><span data-i18n="nav_create">Create</span></button>
 </nav>
 
 <button class="fab" onclick="openModal('recordPaymentModal')"><i class="bi bi-plus-lg"></i></button>
@@ -136,12 +225,12 @@
   <div class="modal-sheet" onclick="event.stopPropagation()">
     <div class="modal-handle"></div>
     <button class="modal-close" onclick="closeModal('newKametiModal')"><i class="bi bi-x-lg"></i></button>
-    <div class="modal-title">Nayi Kameti Banayein</div>
-    <div class="form-group"><label class="form-label">Committee Name</label><input class="form-input" type="text" id="nkName" placeholder="e.g. Gulshan Family Committee"/></div>
-    <div class="form-group"><label class="form-label">Total Members</label><input class="form-input" type="number" id="nkMembers" placeholder="12" min="1"/></div>
-    <div class="form-group"><label class="form-label">Monthly Amount (Rs)</label><input class="form-input" type="number" id="nkAmount" placeholder="10000" min="1"/></div>
-    <div class="form-group"><label class="form-label">Start Date</label><input class="form-input" type="date" id="nkDate"/></div>
-    <button class="btn-submit" onclick="createKameti()">Kameti Banao <i class="bi bi-check2 ms-1"></i></button>
+    <div class="modal-title" data-i18n="modal_new_kameti">Nayi Kameti Banayein</div>
+    <div class="form-group"><label class="form-label" data-i18n="label_comm_name">Committee Name</label><input class="form-input" type="text" id="nkName" placeholder="e.g. Gulshan Family Committee"/></div>
+    <div class="form-group"><label class="form-label" data-i18n="label_total_members">Total Members</label><input class="form-input" type="number" id="nkMembers" placeholder="12" min="1"/></div>
+    <div class="form-group"><label class="form-label" data-i18n="label_monthly_amt">Monthly Amount (Rs)</label><input class="form-input" type="number" id="nkAmount" placeholder="10000" min="1"/></div>
+    <div class="form-group"><label class="form-label" data-i18n="label_start_date">Start Date</label><input class="form-input" type="date" id="nkDate"/></div>
+    <button class="btn-submit" onclick="createKameti()"><span data-i18n="btn_create_kameti">Kameti Banao</span> <i class="bi bi-check2 ms-1"></i></button>
   </div>
 </div>
 
@@ -150,11 +239,11 @@
   <div class="modal-sheet" onclick="event.stopPropagation()">
     <div class="modal-handle"></div>
     <button class="modal-close" onclick="closeModal('addMemberModal')"><i class="bi bi-x-lg"></i></button>
-    <div class="modal-title">Member Add Karein</div>
-    <div class="form-group"><label class="form-label">Full Name</label><input class="form-input" type="text" id="nmName" placeholder="Member ka naam"/></div>
-    <div class="form-group"><label class="form-label">Phone Number</label><input class="form-input" type="tel" id="nmPhone" placeholder="03XX-XXXXXXX"/></div>
-    <div class="form-group"><label class="form-label">Committee</label><select class="form-input" id="nmKameti"></select></div>
-    <button class="btn-submit" onclick="addMember()">Member Add Karein <i class="bi bi-person-plus ms-1"></i></button>
+    <div class="modal-title" data-i18n="modal_add_member">Member Add Karein</div>
+    <div class="form-group"><label class="form-label" data-i18n="label_fullname">Full Name</label><input class="form-input" type="text" id="nmName" placeholder="Member ka naam"/></div>
+    <div class="form-group"><label class="form-label" data-i18n="label_phone">Phone Number</label><input class="form-input" type="tel" id="nmPhone" placeholder="03XX-XXXXXXX"/></div>
+    <div class="form-group"><label class="form-label" data-i18n="label_committee">Committee</label><select class="form-input" id="nmKameti"></select></div>
+    <button class="btn-submit" onclick="addMember()"><span data-i18n="btn_add_member">Member Add Karein</span> <i class="bi bi-person-plus ms-1"></i></button>
   </div>
 </div>
 
@@ -163,13 +252,13 @@
   <div class="modal-sheet" onclick="event.stopPropagation()">
     <div class="modal-handle"></div>
     <button class="modal-close" onclick="closeModal('recordPaymentModal')"><i class="bi bi-x-lg"></i></button>
-    <div class="modal-title">Payment Record Karein</div>
-    <div class="form-group"><label class="form-label">Committee</label><select class="form-input" id="payKameti" onchange="populatePayMembers()"></select></div>
-    <div class="form-group"><label class="form-label">Member</label><select class="form-input" id="payMember"></select></div>
-    <div class="form-group"><label class="form-label">Amount (Rs)</label><input class="form-input" type="number" id="payAmount" placeholder="10000" min="1"/></div>
-    <div class="form-group"><label class="form-label">Payment Date</label><input class="form-input" type="date" id="payDate"/></div>
-    <div class="form-group"><label class="form-label">Notes (Optional)</label><input class="form-input" type="text" id="payNotes" placeholder="Cash / Bank Transfer / etc."/></div>
-    <button class="btn-submit" onclick="recordPayment()">Payment Record Karein <i class="bi bi-check2-all ms-1"></i></button>
+    <div class="modal-title" data-i18n="modal_record_pay">Payment Record Karein</div>
+    <div class="form-group"><label class="form-label" data-i18n="label_committee">Committee</label><select class="form-input" id="payKameti" onchange="populatePayMembers()"></select></div>
+    <div class="form-group"><label class="form-label" data-i18n="label_member">Member</label><select class="form-input" id="payMember"></select></div>
+    <div class="form-group"><label class="form-label" data-i18n="label_amount">Amount (Rs)</label><input class="form-input" type="number" id="payAmount" placeholder="10000" min="1"/></div>
+    <div class="form-group"><label class="form-label" data-i18n="label_pay_date">Payment Date</label><input class="form-input" type="date" id="payDate"/></div>
+    <div class="form-group"><label class="form-label" data-i18n="label_notes">Notes (Optional)</label><input class="form-input" type="text" id="payNotes" placeholder="Cash / Bank Transfer / etc."/></div>
+    <button class="btn-submit" onclick="recordPayment()"><span data-i18n="btn_record_pay">Payment Record Karein</span> <i class="bi bi-check2-all ms-1"></i></button>
   </div>
 </div>
 
@@ -178,12 +267,12 @@
   <div class="modal-sheet" onclick="event.stopPropagation()">
     <div class="modal-handle"></div>
     <button class="modal-close" onclick="closeModal('fineModal')"><i class="bi bi-x-lg"></i></button>
-    <div class="modal-title">Fine Lagayein</div>
-    <div class="form-group"><label class="form-label">Committee</label><select class="form-input" id="fineKameti" onchange="populateFineMembers()"></select></div>
-    <div class="form-group"><label class="form-label">Member</label><select class="form-input" id="fineMember"></select></div>
-    <div class="form-group"><label class="form-label">Fine Amount (Rs)</label><input class="form-input" type="number" id="fineAmount" placeholder="100" min="1"/></div>
-    <div class="form-group"><label class="form-label">Reason</label><input class="form-input" type="text" id="fineReason" placeholder="Late payment etc."/></div>
-    <button class="btn-submit" onclick="applyFine()">Fine Apply Karein <i class="bi bi-exclamation-triangle ms-1"></i></button>
+    <div class="modal-title" data-i18n="modal_fine">Fine Lagayein</div>
+    <div class="form-group"><label class="form-label" data-i18n="label_committee">Committee</label><select class="form-input" id="fineKameti" onchange="populateFineMembers()"></select></div>
+    <div class="form-group"><label class="form-label" data-i18n="label_member">Member</label><select class="form-input" id="fineMember"></select></div>
+    <div class="form-group"><label class="form-label" data-i18n="label_fine_amt">Fine Amount (Rs)</label><input class="form-input" type="number" id="fineAmount" placeholder="100" min="1"/></div>
+    <div class="form-group"><label class="form-label" data-i18n="label_reason">Reason</label><input class="form-input" type="text" id="fineReason" placeholder="Late payment etc."/></div>
+    <button class="btn-submit" onclick="applyFine()"><span data-i18n="btn_apply_fine">Fine Apply Karein</span> <i class="bi bi-exclamation-triangle ms-1"></i></button>
   </div>
 </div>
 
@@ -213,24 +302,24 @@
   <div class="modal-sheet" onclick="event.stopPropagation()">
     <div class="modal-handle"></div>
     <button class="modal-close" onclick="closeModal('quranAndaziModal')"><i class="bi bi-x-lg"></i></button>
-    <div class="modal-title">🎴 Quran Andazi</div>
+    <div class="modal-title" data-i18n="modal_qa">🎴 Quran Andazi</div>
     <div class="form-group">
-      <label class="form-label">Committee Select Karein</label>
+      <label class="form-label" data-i18n="label_select_comm">Committee Select Karein</label>
       <select class="form-input" id="qaKameti" onchange="populateQaMembers()"></select>
     </div>
     <div class="form-group">
-      <label class="form-label">Draw Mein Shamil Members</label>
+      <label class="form-label" data-i18n="label_eligible">Draw Mein Shamil Members</label>
       <div id="qaEligibleInfo" style="font-size:12px;color:var(--text3);margin-top:4px;"></div>
     </div>
     <div class="qa-draw-area" id="qaDrawArea">
       <div class="qa-cards-wrap" id="qaCardsWrap"></div>
       <button class="qa-draw-btn" id="qaDrawBtn" onclick="startQuranAndazi()">
-        <i class="bi bi-shuffle me-2"></i>Draw Karein
+        <i class="bi bi-shuffle me-2"></i><span data-i18n="btn_draw">Draw Karein</span>
       </button>
     </div>
     <div class="qa-result" id="qaResult" style="display:none"></div>
     <div style="font-size:10px;color:var(--text3);text-align:center;margin-top:12px;">
-      <i class="bi bi-info-circle me-1"></i>Sirf eligible members (jo pehle winner nahi ban chuke) draw mein shamil honge
+      <i class="bi bi-info-circle me-1"></i><span data-i18n="qa_footer">Sirf eligible members (jo pehle winner nahi ban chuke) draw mein shamil honge</span>
     </div>
   </div>
 </div>
@@ -239,18 +328,19 @@
 <div class="modal-overlay" id="logoutModal" onclick="closeModalOutside(event,'logoutModal')">
   <div class="modal-sheet" onclick="event.stopPropagation()" style="padding-bottom:28px;">
     <div class="modal-handle"></div>
-    <div class="modal-title" style="text-align:center;margin-top:8px;">Logout Karein? 👋</div>
-    <p style="text-align:center;color:var(--text3);font-size:13px;margin-bottom:20px;">Aap apne account se logout ho jayenge</p>
+    <div class="modal-title" style="text-align:center;margin-top:8px;" data-i18n="modal_logout">Logout Karein? 👋</div>
+    <p style="text-align:center;color:var(--text3);font-size:13px;margin-bottom:20px;" data-i18n="logout_sub">Aap apne account se logout ho jayenge</p>
     <div style="display:flex;gap:10px;">
-      <button class="btn-ghost" style="flex:1;" onclick="closeModal('logoutModal')">Wapas Jao</button>
+      <button class="btn-ghost" style="flex:1;" onclick="closeModal('logoutModal')" data-i18n="btn_go_back">Wapas Jao</button>
       <button class="btn-danger-ghost" style="flex:1;" onclick="confirmLogout()">
-        <i class="bi bi-box-arrow-right me-1"></i>Logout
+        <i class="bi bi-box-arrow-right me-1"></i><span data-i18n="btn_confirm_logout">Logout</span>
       </button>
     </div>
   </div>
 </div>
 
 <div class="toast-container" id="toastContainer"></div>
+<script src="./lang.js"></script>
 <script type="module" src="./app.js"></script>
 </body>
 </html>
