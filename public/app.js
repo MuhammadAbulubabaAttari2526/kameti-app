@@ -76,6 +76,8 @@ onAuthStateChanged(auth, async (user) => {
 
   populateKametiDropdowns();
   renderDashboard();
+  renderMembers();
+  renderPayments();
   updateTopbarUser();
   if (typeof window.applyLang === 'function') window.applyLang();
 
@@ -247,7 +249,6 @@ function toggleTheme() {
   isDark = !isDark;
   document.documentElement.setAttribute('data-theme', isDark ? 'dark' : 'light');
   localStorage.setItem('kametiTheme', isDark ? 'dark' : 'light');
-  document.getElementById('themeIcon').className = isDark ? 'bi bi-moon-fill' : 'bi bi-sun-fill';
   const icon = document.getElementById('themeIcon');
   if (icon) icon.className = isDark ? 'bi bi-moon-fill' : 'bi bi-sun-fill';
   showToast(isDark ? t('dark_mode') : t('light_mode'), '');
@@ -351,7 +352,7 @@ function renderMembers() {
     const c = getCommittee(m.committeeId);
     const badgeClass = m.status === 'paid' ? 'badge-active' : m.status === 'late' ? '' : 'badge-month';
     const badgeStyle = m.status === 'late' ? 'background:rgba(239,68,68,.1);color:#ef4444;border:1px solid rgba(239,68,68,.2)' : '';
-    const statusLabel = m.status === 'paid' ? t('paid_status') : m.status === 'late' ? 'Late' : t('pending_status');
+    const statusLabel = m.status === 'paid' ? t('paid_status') : m.status === 'late' ? t('late_status') : t('pending_status');
     return `<div class="member-card" onclick="openMemberDetail(${m.id})">
       <div class="mc-avatar" style="background:${colorForMember(m)}">${initials(m.name)}</div>
       <div class="mc-info">
@@ -415,6 +416,7 @@ function renderPayments() {
       const m = getMember(p.memberId);
       const typeClass = p.type === 'paid' ? 'pi-paid' : p.type === 'late' ? 'pi-late' : 'pi-pending';
       const typeIcon  = p.type === 'paid' ? 'bi-check-circle-fill' : p.type === 'late' ? 'bi-x-circle-fill' : 'bi-hourglass-split';
+      const typeLabel = p.type === 'paid' ? t('paid_status') : p.type === 'late' ? t('late_status') : t('pending_status');
       html += `<div class="pay-item">
         <div class="pi-left">
           <div class="pi-avatar" style="background:${m ? colorForMember(m) : '#334155'}">${m ? initials(m.name) : '?'}</div>
@@ -425,7 +427,7 @@ function renderPayments() {
         </div>
         <div class="pi-right">
           <div class="pi-amount ${typeClass}">${formatRs(p.amount)}</div>
-          <div class="pi-type ${typeClass}"><i class="bi ${typeIcon} me-1"></i>${p.type}</div>
+          <div class="pi-type ${typeClass}"><i class="bi ${typeIcon} me-1"></i>${typeLabel}</div>
         </div>
       </div>`;
     });
@@ -466,15 +468,18 @@ function openMemberDetail(memberId) {
     <div style="background:var(--card2);border-radius:12px;padding:12px;margin-bottom:14px;">
       <div style="font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px;">${t('payments_history')}</div>
       ${payments.length === 0 ? `<p style="font-size:12px;color:var(--text3)">${t('no_payments')}</p>` :
-        payments.map(p => `
+        payments.map(p => {
+          const pLabel = p.type === 'paid' ? t('paid_status') : p.type === 'late' ? t('late_status') : t('pending_status');
+          return `
           <div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid var(--border);font-size:12px;">
             <span>${p.date}</span>
-            <span style="color:${p.type === 'paid' ? 'var(--accent)' : p.type === 'late' ? 'var(--danger)' : 'var(--warn)'};font-weight:600">${formatRs(p.amount)} · ${p.type}</span>
-          </div>`).join('')}
+            <span style="color:${p.type === 'paid' ? 'var(--accent)' : p.type === 'late' ? 'var(--danger)' : 'var(--warn)'};font-weight:600">${formatRs(p.amount)} · ${pLabel}</span>
+          </div>`;
+        }).join('')}
     </div>`;
 
   document.getElementById('mdActions').innerHTML = `
-    <button class="btn-ghost" onclick="closeModal('memberDetailModal');openModal('recordPaymentModal');setTimeout(()=>{document.getElementById('payMember').value='${m.id}'},100)">
+    <button class="btn-ghost" onclick="closeModal('memberDetailModal');openModal('recordPaymentModal');setTimeout(()=>{document.getElementById('payKameti').value='${m.committeeId}';populatePayMembers();document.getElementById('payMember').value='${m.id}'},100)">
       <i class="bi bi-cash me-1"></i>Payment Record
     </button>
     <button class="btn-danger-ghost" onclick="deleteMember(${m.id})">
@@ -599,8 +604,10 @@ window.addMember = addMember;
 // ─────────────────────────────────────────────────────────────────────────────
 function populatePayMembers() {
   const cId     = parseInt(document.getElementById('payKameti').value);
-  const members = state.members.filter(m => m.committeeId === cId);
-  document.getElementById('payMember').innerHTML = members.map(m => `<option value="${m.id}">${m.name}</option>`).join('');
+  const members = state.members.filter(m => m.committeeId === cId && m.status !== 'paid');
+  document.getElementById('payMember').innerHTML = members.length
+    ? members.map(m => `<option value="${m.id}">${m.name}</option>`).join('')
+    : '<option value="">Koi unpaid member nahi</option>';
 }
 window.populatePayMembers = populatePayMembers;
 
@@ -624,8 +631,8 @@ function recordPayment() {
   const committee = getCommittee(committeeId);
   const allMembers = state.members.filter(mem => mem.committeeId === committeeId);
   const allPaid = allMembers.every(mem => mem.status === 'paid');
-  if (allPaid && committee) {
-    committee.currentMonth = Math.min((committee.currentMonth || 1) + 1, committee.totalMembers);
+  if (allPaid && committee && committee.currentMonth < committee.totalMembers) {
+    committee.currentMonth = committee.currentMonth + 1;
     // Agले month ke liye sab members reset karo pending par
     allMembers.forEach(mem => { mem.status = 'pending'; });
     state.payments.push(...allMembers.map(mem => ({
@@ -673,6 +680,7 @@ function applyFine() {
   m.status = 'late';
   const existing = state.payments.find(p => p.memberId === memberId && p.type !== 'paid');
   if (existing) { existing.type = 'late'; existing.amount += fineAmt; existing.notes = `Fine: ${formatRs(fineAmt)}${reason ? ' · ' + reason : ''}`; }
+  else { state.payments.push({ id: state.nextId.payment++, memberId, committeeId: m.committeeId, amount: fineAmt, date: today(), type: 'late', notes: `Fine: ${formatRs(fineAmt)}${reason ? ' · ' + reason : ''}` }); }
 
   closeModal('fineModal');
   document.getElementById('fineAmount').value = '';
@@ -796,8 +804,7 @@ function startQuranAndazi() {
 
     if (count >= totalFlips) {
       clearInterval(interval);
-      const winnerIdx = Math.floor(Math.random() * eligible.length);
-      const winner    = eligible[winnerIdx];
+      const winner = eligible[currentHighlight];
 
       cards.forEach(card => { card.classList.remove('spinning'); card.style.transform = ''; });
 

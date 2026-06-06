@@ -230,7 +230,7 @@
 
   <div class="auth-footer">
     <i class="bi bi-shield-check" style="color:var(--accent)"></i>
-  yours data is secured and private · KametiApp © 2026
+  Your data is secured and private · KametiApp © 2026
   </div>
 </div>
 
@@ -303,10 +303,13 @@ onAuthStateChanged(auth, (user) => {
 });
 
 // ═══ THEME ═══
-let isDark = true;
+let isDark = localStorage.getItem('kametiTheme') !== 'light';
+document.documentElement.setAttribute('data-theme', isDark ? 'dark' : 'light');
+document.getElementById('themeIcon').className = isDark ? 'bi bi-moon-fill' : 'bi bi-sun-fill';
 window.toggleTheme = function() {
   isDark = !isDark;
   document.documentElement.setAttribute('data-theme', isDark ? 'dark' : 'light');
+  localStorage.setItem('kametiTheme', isDark ? 'dark' : 'light');
   document.getElementById('themeIcon').className = isDark ? 'bi bi-moon-fill' : 'bi bi-sun-fill';
 };
 
@@ -495,8 +498,8 @@ window.handleForgot = async function() {
 document.addEventListener('keydown', e => {
   if (e.key !== 'Enter') return;
   if (document.getElementById('loginSignupArea').style.display === 'none') return;
-  if (document.getElementById('panel-login').classList.contains('active')) handleLogin();
-  else if (document.getElementById('panel-signup').classList.contains('active')) handleSignup();
+  if (document.getElementById('panel-login').classList.contains('active')) window.handleLogin();
+  else if (document.getElementById('panel-signup').classList.contains('active')) window.handleSignup();
 });
 
 // ═══ FIREBASE ERROR MESSAGES ═══
