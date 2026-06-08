@@ -237,6 +237,47 @@ select.form-input option{background:var(--card);}
 .pay-group-items .payment-item{border-radius:0;border:none;border-bottom:1px solid var(--border);margin:0;}
 .pay-group-items .payment-item:last-child{border-bottom:none;}
 
+/* PAY ITEM — new grouped layout classes */
+.pay-item{display:flex;align-items:center;justify-content:space-between;padding:11px 14px;border-bottom:1px solid var(--border);transition:background var(--transition);}
+.pay-item:last-child{border-bottom:none;}
+.pay-item:hover{background:var(--card2);}
+.pi-left{display:flex;align-items:center;gap:10px;flex:1;min-width:0;}
+.pi-avatar{width:36px;height:36px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;color:#fff;flex-shrink:0;}
+.pi-name{font-size:13px;font-weight:500;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.pi-sub{font-size:10px;color:var(--text3);margin-top:1px;}
+.pi-right{display:flex;flex-direction:column;align-items:flex-end;gap:3px;flex-shrink:0;margin-left:8px;}
+.pi-amount{font-size:13px;font-weight:700;}
+.pi-type{font-size:10px;font-weight:600;padding:2px 8px;border-radius:20px;display:flex;align-items:center;}
+
+/* Pay status color classes */
+.pi-paid  .pi-amount{color:var(--accent);}
+.pi-paid  .pi-type{color:var(--accent);background:var(--success-light);border:1px solid rgba(16,185,129,.25);}
+.pi-pending .pi-amount{color:var(--warn);}
+.pi-pending .pi-type{color:var(--warn);background:rgba(245,158,11,.1);border:1px solid rgba(245,158,11,.25);}
+.pi-late  .pi-amount{color:var(--danger);}
+.pi-late  .pi-type{color:var(--danger);background:var(--danger-light);border:1px solid rgba(239,68,68,.25);}
+
+/* REMINDER BANNER */
+.reminder-banner{background:linear-gradient(135deg,rgba(245,158,11,.1),rgba(239,68,68,.08));border:1px solid rgba(245,158,11,.3);border-radius:14px;padding:12px 14px;margin-bottom:12px;display:flex;align-items:flex-start;gap:10px;transition:all var(--transition);}
+.reminder-icon{font-size:18px;flex-shrink:0;margin-top:1px;}
+.reminder-body{flex:1;}
+.reminder-title{font-size:12px;font-weight:700;color:var(--warn);margin-bottom:2px;}
+.reminder-sub{font-size:11px;color:var(--text3);line-height:1.4;margin-bottom:7px;}
+.reminder-count{background:var(--warn);color:#fff;font-size:10px;font-weight:700;border-radius:20px;padding:2px 8px;flex-shrink:0;align-self:center;}
+
+/* WHATSAPP BUTTONS */
+.btn-wa-bulk{display:inline-flex;align-items:center;gap:6px;background:rgba(37,211,102,.15);color:#25d366;border:1px solid rgba(37,211,102,.35);border-radius:20px;padding:5px 11px;font-size:11px;font-weight:600;cursor:pointer;transition:all var(--transition);font-family:var(--body-font);}
+.btn-wa-bulk:hover{background:rgba(37,211,102,.25);border-color:#25d366;transform:translateY(-1px);}
+.btn-wa-bulk:active{transform:scale(.97);}
+
+.btn-wa-icon{width:30px;height:30px;border-radius:8px;background:rgba(37,211,102,.12);border:1px solid rgba(37,211,102,.3);color:#25d366;display:flex;align-items:center;justify-content:center;cursor:pointer;transition:all var(--transition);flex-shrink:0;}
+.btn-wa-icon:hover{background:rgba(37,211,102,.25);border-color:#25d366;transform:scale(1.08);}
+.btn-wa-icon:active{transform:scale(.95);}
+
+.wa-reminder-strip{display:flex;align-items:center;gap:10px;background:rgba(37,211,102,.08);border:1px solid rgba(37,211,102,.25);border-radius:10px;padding:10px 13px;margin-bottom:12px;cursor:pointer;transition:all var(--transition);color:#25d366;font-size:12px;font-weight:600;}
+.wa-reminder-strip:hover{background:rgba(37,211,102,.16);border-color:#25d366;transform:translateY(-1px);}
+.wa-reminder-strip svg{flex-shrink:0;}
+
 /* ═══════════════════════════════════ */
 /* QURAN ANDAZI                        */
 /* ═══════════════════════════════════ */

@@ -125,6 +125,7 @@ const TRANSLATIONS = {
     pending_lbl: 'Pending',
     payments_lbl: 'Payments',
     no_committee: 'Koi committee nahi. Nayi kameti banayein!',
+    dropdown_no_committee: 'Pehle committee banayein',
     collected_suffix: 'collected',
     paid_suffix: '% paid',
     payment_log: 'Payment Log',
@@ -162,6 +163,45 @@ const TRANSLATIONS = {
     light_mode: 'Light mode on ☀️',
     no_member_found: 'Koi member nahi mila',
     lang_switched: 'Zuban tabdeel ho gayi ✅',
+
+    // ── Dynamic toasts ──
+    toast_committee_created: 'successfully create ho gayi! ✅',
+    toast_committee_full: 'bhar chuki hai!',
+    toast_member_added: 'mein add kar diya! ✅',
+    toast_payment_recorded: 'ka payment record ho gaya! 💰',
+    toast_month_complete: 'complete! Naya maah shuru ho gaya.',
+    toast_fine_applied: 'par fine apply ho gaya! ⚠️',
+    toast_member_deleted: 'delete ho gaye',
+    toast_committee_deleted: 'delete ho gayi',
+    toast_logout_error: 'Logout mein masla aaya',
+    toast_save_error: 'Data save mein masla aaya ⚠️',
+    toast_load_error: 'Data load mein masla aaya ⚠️',
+    toast_wa_sent: 'ko WhatsApp reminder bheja! 📲',
+    toast_wa_bulk_sending: 'members ko WhatsApp reminders bheje ja rahe hain 📲',
+    toast_wa_no_phone: 'ka phone number save nahi hai! ⚠️',
+    toast_wa_none_pending: 'Koi pending/late member nahi hai ✅',
+    toast_wa_no_phones_any: 'Kisi bhi member ka phone number save nahi hai ⚠️',
+    toast_winner: 'is maah ka winner! Mubarak!',
+
+    // ── Confirm dialogs ──
+    confirm_delete_member: 'delete karna chahte hain?',
+    confirm_delete_committee: 'delete karna chahte hain? Sab members aur payments bhi hata diye jayenge.',
+
+    // ── Inline UI strings ──
+    phone_not_saved: 'Phone nahi',
+    wa_reminder_btn: 'WhatsApp Reminder Bhejo',
+    wa_save_phone_hint: 'Phone number save karein taake WhatsApp reminder bhej sakein',
+    late_payment_banner: 'Late Payment — Fine Applicable',
+    late_payment_sub: 'ka payment late hai.',
+    pending_payment_banner: 'Pending Payments',
+    pending_payment_sub: 'ka payment abhi pending hai.',
+    remind_all_btn: 'Sab ko Remind Karein',
+    unknown_committee: 'Unknown Committee',
+    entries_lbl: 'entries',
+    paid_lbl: 'paid',
+    late_lbl: 'late',
+    more_lbl: 'aur',
+    unknown_member: 'Unknown',
   },
 
   en: {
@@ -285,6 +325,7 @@ const TRANSLATIONS = {
     pending_lbl: 'Pending',
     payments_lbl: 'Payments',
     no_committee: 'No committees yet. Create a new one!',
+    dropdown_no_committee: 'Create a committee first',
     collected_suffix: 'collected',
     paid_suffix: '% paid',
     payment_log: 'Payment Log',
@@ -322,6 +363,45 @@ const TRANSLATIONS = {
     light_mode: 'Light mode on ☀️',
     no_member_found: 'No members found',
     lang_switched: 'Language changed ✅',
+
+    // ── Dynamic toasts ──
+    toast_committee_created: 'created successfully! ✅',
+    toast_committee_full: 'is full!',
+    toast_member_added: 'added to',
+    toast_payment_recorded: 'payment recorded! 💰',
+    toast_month_complete: 'complete! New month started.',
+    toast_fine_applied: 'fine applied! ⚠️',
+    toast_member_deleted: 'deleted',
+    toast_committee_deleted: 'deleted',
+    toast_logout_error: 'Logout failed',
+    toast_save_error: 'Error saving data ⚠️',
+    toast_load_error: 'Error loading data ⚠️',
+    toast_wa_sent: 'WhatsApp reminder sent! 📲',
+    toast_wa_bulk_sending: 'members sending WhatsApp reminders 📲',
+    toast_wa_no_phone: 'has no phone number saved! ⚠️',
+    toast_wa_none_pending: 'No pending/late members ✅',
+    toast_wa_no_phones_any: 'No member has a phone number saved ⚠️',
+    toast_winner: 'is this month\'s winner! Congratulations!',
+
+    // ── Confirm dialogs ──
+    confirm_delete_member: 'Are you sure you want to delete',
+    confirm_delete_committee: 'Delete this committee? All members and payments will also be removed.',
+
+    // ── Inline UI strings ──
+    phone_not_saved: 'No phone',
+    wa_reminder_btn: 'Send WhatsApp Reminder',
+    wa_save_phone_hint: 'Save phone number to send WhatsApp reminders',
+    late_payment_banner: 'Late Payment — Fine Applicable',
+    late_payment_sub: 'payment is late.',
+    pending_payment_banner: 'Pending Payments',
+    pending_payment_sub: 'payment is pending.',
+    remind_all_btn: 'Remind All',
+    unknown_committee: 'Unknown Committee',
+    entries_lbl: 'entries',
+    paid_lbl: 'paid',
+    late_lbl: 'late',
+    more_lbl: 'more',
+    unknown_member: 'Unknown',
   }
 };
 

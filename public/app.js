@@ -139,7 +139,7 @@ async function confirmLogout() {
     showToast('Logout ho gaye. Allah Hafiz! 👋', 'warn');
     setTimeout(() => { window.location.href = './auth.html'; }, 800);
   } catch (err) {
-    showToast('Logout mein masla aaya', 'danger');
+    showToast(t('toast_logout_error'), 'danger');
   }
 }
 window.handleLogout  = handleLogout;
@@ -187,7 +187,7 @@ async function saveStateToFirestore() {
     });
   } catch (e) {
     console.error('Firestore save error:', e);
-    showToast('Data save mein masla aaya ⚠️', 'warn');
+    showToast(t('toast_save_error'), 'warn');
   }
 }
 
@@ -206,7 +206,7 @@ async function loadStateFromFirestore() {
     }
   } catch (e) {
     console.error('Firestore load error:', e);
-    showToast('Data load mein masla aaya ⚠️', 'warn');
+    showToast(t('toast_load_error'), 'warn');
   }
 }
 
@@ -380,11 +380,56 @@ function renderPayments() {
   const f = state.filters.payment;
   const filtered = state.payments.filter(p => f === 'all' || p.type === f);
 
+  // ── Reminder banners: pending/late members ──────────────────────────────────
+  const pendingMembers = state.members.filter(m => m.status === 'pending' || m.status === 'late');
+  const lateMembers    = state.members.filter(m => m.status === 'late');
+
+  let reminderHtml = '';
+
+  if (lateMembers.length > 0) {
+    const names = lateMembers.slice(0, 2).map(m => m.name).join(', ');
+    const extra = lateMembers.length > 2 ? ` +${lateMembers.length - 2} ${t('more_lbl')}` : '';
+    const withPhone = lateMembers.filter(m => m.phone && m.phone !== '—').length;
+    reminderHtml += `
+    <div class="reminder-banner">
+      <div class="reminder-icon">⚠️</div>
+      <div class="reminder-body">
+        <div class="reminder-title">${t('late_payment_banner')}</div>
+        <div class="reminder-sub">${names}${extra} ${t('late_payment_sub')}</div>
+        ${withPhone > 0 ? `<button class="btn-wa-bulk" onclick="sendWaBulk(null)">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
+          ${t('remind_all_btn')} (${withPhone})
+        </button>` : ''}
+      </div>
+      <div class="reminder-count">${lateMembers.length}</div>
+    </div>`;
+  }
+
+  if (pendingMembers.length > 0) {
+    const names = pendingMembers.slice(0, 2).map(m => m.name).join(', ');
+    const extra = pendingMembers.length > 2 ? ` +${pendingMembers.length - 2} ${t('more_lbl')}` : '';
+    const withPhone = pendingMembers.filter(m => m.phone && m.phone !== '—').length;
+    reminderHtml += `
+    <div class="reminder-banner" style="border-color:rgba(100,116,139,.3);background:rgba(100,116,139,.07);">
+      <div class="reminder-icon">🔔</div>
+      <div class="reminder-body">
+        <div class="reminder-title" style="color:var(--text2)">${t('pending_payment_banner')} — ${pendingMembers.length} Members</div>
+        <div class="reminder-sub">${names}${extra} ${t('pending_payment_sub')}</div>
+        ${withPhone > 0 ? `<button class="btn-wa-bulk" style="background:rgba(37,211,102,.12);color:#25d366;border-color:rgba(37,211,102,.3);" onclick="sendWaBulk(null)">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
+          ${t('remind_all_btn')} (${withPhone})
+        </button>` : ''}
+      </div>
+      <div class="reminder-count" style="background:var(--text3)">${pendingMembers.length}</div>
+    </div>`;
+  }
+
   if (filtered.length === 0) {
-    document.getElementById('paymentList').innerHTML = `<div class="empty-state"><i class="bi bi-cash-stack"></i><p>${t('no_payments')}</p></div>`;
+    document.getElementById('paymentList').innerHTML = reminderHtml + `<div class="empty-state"><i class="bi bi-cash-stack"></i><p>${t('no_payments')}</p></div>`;
     return;
   }
 
+  // ── Group payments by committee ─────────────────────────────────────────────
   const grouped = {};
   [...filtered].reverse().forEach(p => {
     const cId = p.committeeId || 0;
@@ -392,20 +437,25 @@ function renderPayments() {
     grouped[cId].push(p);
   });
 
-  let html = '';
+  let html = reminderHtml;
   Object.keys(grouped).forEach(cId => {
     const c = getCommittee(parseInt(cId));
     const groupPayments = grouped[cId];
     const groupTotal = groupPayments.filter(p => p.type === 'paid').reduce((s, p) => s + p.amount, 0);
     const paidCount  = groupPayments.filter(p => p.type === 'paid').length;
+    const lateCount  = groupPayments.filter(p => p.type === 'late').length;
+
+    const dotStyle = lateCount > 0
+      ? 'background:var(--danger);box-shadow:0 0 8px rgba(239,68,68,.4)'
+      : 'background:linear-gradient(135deg,var(--accent),var(--accent-d));box-shadow:0 0 8px rgba(16,185,129,.4)';
 
     html += `<div class="pay-group">
       <div class="pay-group-header">
         <div class="pay-group-left">
-          <div class="pay-group-dot"></div>
+          <div class="pay-group-dot" style="${dotStyle}"></div>
           <div>
-            <div class="pay-group-name">${c?.name || 'Unknown Committee'}</div>
-            <div class="pay-group-meta">${groupPayments.length} entries · ${paidCount} paid</div>
+            <div class="pay-group-name">${c?.name || t('unknown_committee')}</div>
+            <div class="pay-group-meta">${groupPayments.length} ${t('entries_lbl')} · ${paidCount} ${t('paid_lbl')}${lateCount > 0 ? ` · <span style="color:var(--danger)">${lateCount} ${t('late_lbl')}</span>` : ''}</div>
           </div>
         </div>
         <div class="pay-group-total">${formatRs(groupTotal)}</div>
@@ -414,20 +464,27 @@ function renderPayments() {
 
     groupPayments.forEach(p => {
       const m = getMember(p.memberId);
-      const typeClass = p.type === 'paid' ? 'pi-paid' : p.type === 'late' ? 'pi-late' : 'pi-pending';
-      const typeIcon  = p.type === 'paid' ? 'bi-check-circle-fill' : p.type === 'late' ? 'bi-x-circle-fill' : 'bi-hourglass-split';
-      const typeLabel = p.type === 'paid' ? t('paid_status') : p.type === 'late' ? t('late_status') : t('pending_status');
-      html += `<div class="pay-item">
-        <div class="pi-left">
+      const typeClass  = p.type === 'paid' ? 'pi-paid' : p.type === 'late' ? 'pi-late' : 'pi-pending';
+      const typeIcon   = p.type === 'paid' ? 'bi-check-circle-fill' : p.type === 'late' ? 'bi-x-circle-fill' : 'bi-hourglass-split';
+      const typeLabel  = p.type === 'paid' ? t('paid_status') : p.type === 'late' ? t('late_status') : t('pending_status');
+      const needsWa    = (p.type === 'pending' || p.type === 'late') && m && m.phone && m.phone !== '—';
+
+      html += `<div class="pay-item ${typeClass}">
+        <div class="pi-left" onclick="openMemberDetail(${p.memberId})" style="cursor:pointer">
           <div class="pi-avatar" style="background:${m ? colorForMember(m) : '#334155'}">${m ? initials(m.name) : '?'}</div>
-          <div>
-            <div class="pi-name">${m?.name || 'Unknown'}</div>
+          <div style="min-width:0">
+            <div class="pi-name">${m?.name || t('unknown_member')}</div>
             <div class="pi-sub">${p.date}${p.notes ? ' · ' + p.notes : ''}</div>
           </div>
         </div>
-        <div class="pi-right">
-          <div class="pi-amount ${typeClass}">${formatRs(p.amount)}</div>
-          <div class="pi-type ${typeClass}"><i class="bi ${typeIcon} me-1"></i>${typeLabel}</div>
+        <div style="display:flex;align-items:center;gap:7px;flex-shrink:0;margin-left:8px;">
+          ${needsWa ? `<button class="btn-wa-icon" onclick="sendWaReminder(${p.memberId})" title="WhatsApp Reminder">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
+          </button>` : ''}
+          <div class="pi-right">
+            <div class="pi-amount">${formatRs(p.amount)}</div>
+            <div class="pi-type"><i class="bi ${typeIcon} me-1"></i>${typeLabel}</div>
+          </div>
         </div>
       </div>`;
     });
@@ -450,21 +507,103 @@ window.setPayFilter = setPayFilter;
 // ─────────────────────────────────────────────────────────────────────────────
 // MEMBER DETAIL MODAL
 // ─────────────────────────────────────────────────────────────────────────────
+// WHATSAPP REMINDER
+// ─────────────────────────────────────────────────────────────────────────────
+function buildWaMessage(member, committee, type) {
+  const amt = formatRs(committee.monthlyAmount);
+  if (type === 'late') {
+    return `Assalam o Alaikum ${member.name} bhai/sahiba! 🙏\n\n` +
+      `*${committee.name}* committee ka payment abhi tak receive nahi hua.\n\n` +
+      `💰 Amount: *${amt}*\n` +
+      `⚠️ Status: *Late — Fine Applicable*\n\n` +
+      `Meherbani karke jald se jald payment karein. Shukriya! 🤲\n\n` +
+      `_KametiApp_`;
+  }
+  return `Assalam o Alaikum ${member.name} bhai/sahiba! 👋\n\n` +
+    `*${committee.name}* committee ki maheena payment ki yaad dahaani:\n\n` +
+    `💰 Amount: *${amt}*\n` +
+    `📅 Status: *Pending*\n\n` +
+    `Meherbani karke payment jald karein. Jazak Allah! 🌙\n\n` +
+    `_KametiApp_`;
+}
+
+function sendWaReminder(memberId) {
+  const m = getMember(memberId);
+  const c = getCommittee(m.committeeId);
+  if (!m || !c) return;
+
+  const rawPhone = (m.phone || '').replace(/\D/g, '');
+  if (!rawPhone || rawPhone === '' || m.phone === '—') {
+    showToast(`${m.name} ${t('toast_wa_no_phone')}`, 'warn');
+    return;
+  }
+
+  // Pakistani number normalize: 03xx → 923xx
+  let phone = rawPhone;
+  if (phone.startsWith('0')) phone = '92' + phone.slice(1);
+  else if (!phone.startsWith('92')) phone = '92' + phone;
+
+  const msg  = buildWaMessage(m, c, m.status);
+  const url  = `https://wa.me/${phone}?text=${encodeURIComponent(msg)}`;
+  window.open(url, '_blank');
+  showToast(`${m.name} ${t('toast_wa_sent')}`, '');
+}
+window.sendWaReminder = sendWaReminder;
+
+// Bulk WhatsApp — sab pending/late members ko ek ek kar ke
+function sendWaBulk(committeeId) {
+  const members = committeeId
+    ? state.members.filter(m => m.committeeId === committeeId && (m.status === 'pending' || m.status === 'late'))
+    : state.members.filter(m => m.status === 'pending' || m.status === 'late');
+
+  if (members.length === 0) { showToast(t('toast_wa_none_pending'), ''); return; }
+
+  const withPhone = members.filter(m => m.phone && m.phone !== '—');
+  if (withPhone.length === 0) { showToast(t('toast_wa_no_phones_any'), 'warn'); return; }
+
+  // Ek ek karke open karta hai with small delay (browsers block multiple popups)
+  withPhone.forEach((m, i) => {
+    setTimeout(() => sendWaReminder(m.id), i * 800);
+  });
+  showToast(`${withPhone.length} ${t('toast_wa_bulk_sending')}`, '');
+}
+window.sendWaBulk = sendWaBulk;
+
+// ─────────────────────────────────────────────────────────────────────────────
+// MEMBER DETAIL MODAL
+// ─────────────────────────────────────────────────────────────────────────────
 function openMemberDetail(memberId) {
   const m = getMember(memberId);
   const c = getCommittee(m.committeeId);
   const payments = state.payments.filter(p => p.memberId === memberId);
+  const hasPhone = m.phone && m.phone !== '—';
+  const isPendingOrLate = m.status === 'pending' || m.status === 'late';
 
   document.getElementById('mdTitle').textContent = m.name;
   document.getElementById('mdBody').innerHTML = `
     <div style="display:flex;align-items:center;gap:14px;margin-bottom:16px;">
       <div style="width:54px;height:54px;border-radius:50%;background:${colorForMember(m)};display:flex;align-items:center;justify-content:center;font-size:20px;font-weight:700;color:#fff;flex-shrink:0;">${initials(m.name)}</div>
-      <div>
+      <div style="flex:1">
         <div style="font-weight:600;font-size:15px;">${m.name}</div>
         <div style="font-size:12px;color:var(--text3);">Member #${m.turn} · ${c?.name || '—'}</div>
-        <div style="font-size:12px;color:var(--text3);">${m.phone}</div>
+        <div style="font-size:12px;color:var(--text3);display:flex;align-items:center;gap:6px;margin-top:2px;">
+          ${hasPhone
+            ? `<i class="bi bi-telephone-fill" style="color:var(--accent)"></i> ${m.phone}`
+            : `<i class="bi bi-telephone-x" style="color:var(--text3)"></i> <span style="color:var(--text3)">${t('phone_not_saved')}</span>`
+          }
+        </div>
       </div>
     </div>
+    ${isPendingOrLate && hasPhone ? `
+    <div class="wa-reminder-strip" onclick="sendWaReminder(${m.id})">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
+      <span>${t('wa_reminder_btn')}</span>
+      <i class="bi bi-chevron-right" style="margin-left:auto;font-size:11px;opacity:.6"></i>
+    </div>` : isPendingOrLate && !hasPhone ? `
+    <div style="background:rgba(245,158,11,.08);border:1px solid rgba(245,158,11,.2);border-radius:10px;padding:9px 12px;margin-bottom:12px;font-size:11px;color:var(--warn);display:flex;align-items:center;gap:8px;">
+      <i class="bi bi-exclamation-triangle-fill"></i>
+      ${t('wa_save_phone_hint')}
+    </div>` : ''}
     <div style="background:var(--card2);border-radius:12px;padding:12px;margin-bottom:14px;">
       <div style="font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px;">${t('payments_history')}</div>
       ${payments.length === 0 ? `<p style="font-size:12px;color:var(--text3)">${t('no_payments')}</p>` :
@@ -480,10 +619,10 @@ function openMemberDetail(memberId) {
 
   document.getElementById('mdActions').innerHTML = `
     <button class="btn-ghost" onclick="closeModal('memberDetailModal');openModal('recordPaymentModal');setTimeout(()=>{document.getElementById('payKameti').value='${m.committeeId}';populatePayMembers();document.getElementById('payMember').value='${m.id}'},100)">
-      <i class="bi bi-cash me-1"></i>Payment Record
+      <i class="bi bi-cash me-1"></i>${t('btn_mark_paid')}
     </button>
     <button class="btn-danger-ghost" onclick="deleteMember(${m.id})">
-      <i class="bi bi-trash me-1"></i>Delete
+      <i class="bi bi-trash me-1"></i>${t('btn_delete')}
     </button>`;
 
   openModal('memberDetailModal');
@@ -492,11 +631,11 @@ window.openMemberDetail = openMemberDetail;
 
 function deleteMember(memberId) {
   const m = getMember(memberId);
-  if (!confirm(`"${m.name}" delete karna chahte hain?`)) return;
+  if (!confirm(`"${m.name}" ${t('confirm_delete_member')}`)) return;
   state.members  = state.members.filter(x => x.id !== memberId);
   state.payments = state.payments.filter(p => p.memberId !== memberId);
   closeModal('memberDetailModal');
-  showToast(`${m.name} delete ho gaye`, 'danger');
+  showToast(`${m.name} ${t('toast_member_deleted')}`, 'danger');
   renderDashboard(); renderMembers(); renderPayments();
   saveState();
 }
@@ -531,13 +670,13 @@ window.openKametiDetail = openKametiDetail;
 
 function deleteKameti(committeeId) {
   const c = getCommittee(committeeId);
-  if (!confirm(`"${c.name}" delete karna chahte hain? Sab members aur payments bhi hata diye jayenge.`)) return;
+  if (!confirm(`"${c.name}" ${t('confirm_delete_committee')}`)) return;
   state.committees = state.committees.filter(x => x.id !== committeeId);
   const mIds = state.members.filter(m => m.committeeId === committeeId).map(m => m.id);
   state.members  = state.members.filter(m => m.committeeId !== committeeId);
   state.payments = state.payments.filter(p => !mIds.includes(p.memberId));
   closeModal('kametiDetailModal');
-  showToast(`"${c.name}" delete ho gayi`, 'danger');
+  showToast(`"${c.name}" ${t('toast_committee_deleted')}`, 'danger');
   renderDashboard(); renderMembers(); renderPayments();
   populateKametiDropdowns();
   saveState();
@@ -553,9 +692,9 @@ function createKameti() {
   const amount  = parseInt(document.getElementById('nkAmount').value);
   const date    = document.getElementById('nkDate').value;
 
-  if (!name)               { showToast('Committee ka naam likhein!', 'warn'); return; }
-  if (!members || members < 1) { showToast('Members ki tadaad likhein!', 'warn'); return; }
-  if (!amount  || amount  < 1) { showToast('Monthly amount likhein!', 'warn'); return; }
+  if (!name)               { showToast(t('label_comm_name') + (window.currentLang() === 'en' ? ' required!' : ' likhein!'), 'warn'); return; }
+  if (!members || members < 1) { showToast(t('label_total_members') + (window.currentLang() === 'en' ? ' required!' : ' likhein!'), 'warn'); return; }
+  if (!amount  || amount  < 1) { showToast(t('label_monthly_amt') + (window.currentLang() === 'en' ? ' required!' : ' likhein!'), 'warn'); return; }
 
   const newC = { id: state.nextId.committee++, name, totalMembers: members, monthlyAmount: amount, startDate: date || today(), currentMonth: 1, winnersHistory: [] };
   state.committees.push(newC);
@@ -563,7 +702,7 @@ function createKameti() {
   document.getElementById('nkName').value = '';
   document.getElementById('nkMembers').value = '';
   document.getElementById('nkAmount').value = '';
-  showToast(`"${name}" successfully create ho gayi! ✅`, '');
+  showToast(`"${name}" ${t('toast_committee_created')}`, '');
   populateKametiDropdowns();
   renderDashboard();
   saveState();
@@ -578,12 +717,12 @@ function addMember() {
   const phone       = document.getElementById('nmPhone').value.trim();
   const committeeId = parseInt(document.getElementById('nmKameti').value);
 
-  if (!name)        { showToast('Member ka naam likhein!', 'warn'); return; }
-  if (!committeeId) { showToast('Committee select karein!', 'warn'); return; }
+  if (!name)        { showToast(t('label_fullname') + (window.currentLang() === 'en' ? ' is required!' : ' likhein!'), 'warn'); return; }
+  if (!committeeId) { showToast(t('label_committee') + (window.currentLang() === 'en' ? ' required!' : ' select karein!'), 'warn'); return; }
 
   const c = getCommittee(committeeId);
   const existingInComm = state.members.filter(m => m.committeeId === committeeId);
-  if (existingInComm.length >= c.totalMembers) { showToast('Yeh committee bhar chuki hai!', 'warn'); return; }
+  if (existingInComm.length >= c.totalMembers) { showToast(`${c.name} ${t('toast_committee_full')}`, 'warn'); return; }
 
   const colorIdx = state.nextId.member % COLORS.length;
   const newM = { id: state.nextId.member++, name, phone: phone || '—', committeeId, status: 'pending', color: COLORS[colorIdx], turn: existingInComm.length + 1 };
@@ -593,7 +732,7 @@ function addMember() {
   closeModal('addMemberModal');
   document.getElementById('nmName').value  = '';
   document.getElementById('nmPhone').value = '';
-  showToast(`${name} ko ${c.name} mein add kar diya! ✅`, '');
+  showToast(`${name} ${t('toast_member_added')} ${c.name}! ✅`, '');
   renderDashboard(); renderMembers(); renderPayments();
   saveState();
 }
@@ -607,7 +746,7 @@ function populatePayMembers() {
   const members = state.members.filter(m => m.committeeId === cId && m.status !== 'paid');
   document.getElementById('payMember').innerHTML = members.length
     ? members.map(m => `<option value="${m.id}">${m.name}</option>`).join('')
-    : '<option value="">Koi unpaid member nahi</option>';
+    : `<option value="">${t('no_member_found')}</option>`;
 }
 window.populatePayMembers = populatePayMembers;
 
@@ -618,8 +757,8 @@ function recordPayment() {
   const date        = document.getElementById('payDate').value;
   const notes       = document.getElementById('payNotes').value.trim();
 
-  if (!amount || amount < 1) { showToast('Amount daakhil karein!', 'warn'); return; }
-  if (!memberId)             { showToast('Member select karein!', 'warn'); return; }
+  if (!amount || amount < 1) { showToast(t('label_amount') + (window.currentLang() === 'en' ? ' required!' : ' daakhil karein!'), 'warn'); return; }
+  if (!memberId)             { showToast(t('label_member') + (window.currentLang() === 'en' ? ' required!' : ' select karein!'), 'warn'); return; }
 
   const m = getMember(memberId);
   const existing = state.payments.find(p => p.memberId === memberId && p.committeeId === committeeId && p.type !== 'paid');
@@ -644,13 +783,13 @@ function recordPayment() {
       type: 'pending',
       notes: ''
     })));
-    showToast(`🎉 ${committee.name} — Month ${committee.currentMonth - 1} complete! Naya maah shuru ho gaya.`, '');
+    showToast(`🎉 ${committee.name} — Month ${committee.currentMonth - 1} ${t('toast_month_complete')}`, '');
   }
 
   closeModal('recordPaymentModal');
   document.getElementById('payAmount').value = '';
   document.getElementById('payNotes').value  = '';
-  showToast(`${m.name} ka ${formatRs(amount)} record ho gaya! 💰`, '');
+  showToast(`${m.name} ${t('toast_payment_recorded')}`, '');
   renderDashboard(); renderMembers(); renderPayments();
   saveState();
 }
@@ -664,7 +803,7 @@ function populateFineMembers() {
   const members = state.members.filter(m => m.committeeId === cId && m.status !== 'paid');
   document.getElementById('fineMember').innerHTML = members.length
     ? members.map(m => `<option value="${m.id}">${m.name}</option>`).join('')
-    : '<option value="">No pending members</option>';
+    : `<option value="">${t('no_member_found')}</option>`;
 }
 window.populateFineMembers = populateFineMembers;
 
@@ -673,8 +812,8 @@ function applyFine() {
   const fineAmt  = parseInt(document.getElementById('fineAmount').value);
   const reason   = document.getElementById('fineReason').value.trim();
 
-  if (!memberId)          { showToast('Member select karein!', 'warn'); return; }
-  if (!fineAmt || fineAmt < 1) { showToast('Fine amount likhein!', 'warn'); return; }
+  if (!memberId)          { showToast(t('label_member') + (window.currentLang() === 'en' ? ' required!' : ' select karein!'), 'warn'); return; }
+  if (!fineAmt || fineAmt < 1) { showToast(t('label_fine_amt') + (window.currentLang() === 'en' ? ' required!' : ' likhein!'), 'warn'); return; }
 
   const m = getMember(memberId);
   m.status = 'late';
@@ -685,7 +824,7 @@ function applyFine() {
   closeModal('fineModal');
   document.getElementById('fineAmount').value = '';
   document.getElementById('fineReason').value = '';
-  showToast(`${m.name} par ${formatRs(fineAmt)} fine apply ho gaya! ⚠️`, 'warn');
+  showToast(`${m.name} ${t('toast_fine_applied')}`, 'warn');
   renderDashboard(); renderMembers(); renderPayments();
   saveState();
 }
@@ -696,7 +835,7 @@ window.applyFine = applyFine;
 // ─────────────────────────────────────────────────────────────────────────────
 function populateKametiDropdowns() {
   const opts   = state.committees.map(c => `<option value="${c.id}">${c.name}</option>`).join('');
-  const noOpts = '<option value="">Pehle committee banayein</option>';
+  const noOpts = `<option value="">${t('dropdown_no_committee')}</option>`;
   ['nmKameti', 'payKameti', 'fineKameti', 'qaKameti'].forEach(id => {
     const el = document.getElementById(id);
     if (el) el.innerHTML = state.committees.length ? opts : noOpts;
@@ -754,7 +893,7 @@ function populateQaMembers() {
   const eligible = members.filter(m => !wonIds.includes(m.id));
 
   const infoEl = document.getElementById('qaEligibleInfo');
-  infoEl.innerHTML = `<span style="color:var(--accent);font-weight:600">${eligible.length}</span> eligible members · <span style="color:var(--text3)">${wonIds.length} pehle se winner ban chuke hain</span>`;
+  infoEl.innerHTML = `<span style="color:var(--accent);font-weight:600">${eligible.length}</span> ${t('label_eligible').toLowerCase()} · <span style="color:var(--text3)">${wonIds.length} ${t('qa_prev_winners').toLowerCase()}</span>`;
 
   const wrap = document.getElementById('qaCardsWrap');
   wrap.innerHTML = eligible.length === 0
@@ -770,7 +909,7 @@ window.populateQaMembers = populateQaMembers;
 
 function startQuranAndazi() {
   const cId = parseInt(document.getElementById('qaKameti').value);
-  if (!cId) { showToast('Committee select karein!', 'warn'); return; }
+  if (!cId) { showToast(t('label_select_comm') + '!', 'warn'); return; }
 
   const c = getCommittee(cId);
   if (!c.winnersHistory) c.winnersHistory = [];
@@ -778,7 +917,7 @@ function startQuranAndazi() {
   const members  = state.members.filter(m => m.committeeId === cId);
   const eligible = members.filter(m => !wonIds.includes(m.id));
 
-  if (eligible.length === 0) { showToast('Koi eligible member nahi!', 'warn'); return; }
+  if (eligible.length === 0) { showToast(t('qa_none_eligible') + '!', 'warn'); return; }
 
   const btn = document.getElementById('qaDrawBtn');
   btn.disabled = true;
@@ -831,7 +970,7 @@ function startQuranAndazi() {
             ).join('')}
           </div>` : ''}`;
 
-        showToast(`🎉 ${winner.name} is maah ka winner! Mubarak!`, '');
+        showToast(`🎉 ${winner.name} ${t('toast_winner')}`, '');
         btn.disabled = false;
         btn.innerHTML = `<i class="bi bi-arrow-repeat me-2"></i>${t('btn_redraw')}`;
         populateQaMembers();

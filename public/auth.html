@@ -198,31 +198,31 @@
         <div class="user-avatar" id="userAvatar">AK</div>
         <div class="user-name" id="userName">Ahmed Khan</div>
         <div class="user-email" id="userEmail">ahmed@example.com</div>
-        <div class="status-pill"><div class="pulse-dot"></div>Active Account</div>
+        <div class="status-pill"><div class="pulse-dot"></div><span data-i18n="active_account">Active Account</span></div>
 
         <div class="user-info-grid">
           <div class="user-info-row">
-            <span>Account Type</span>
-            <span style="color:var(--accent)">Free Plan</span>
+            <span data-i18n="account_type">Account Type</span>
+            <span style="color:var(--accent)" data-i18n="free_plan">Free Plan</span>
           </div>
           <div class="user-info-row">
-            <span>Login Time</span>
+            <span data-i18n="login_time">Login Time</span>
             <span id="loginTime">—</span>
           </div>
           <div class="user-info-row">
-            <span>Status</span>
-            <span style="color:var(--accent)"><i class="bi bi-check-circle-fill"></i> Verified</span>
+            <span data-i18n="status">Status</span>
+            <span style="color:var(--accent)"><i class="bi bi-check-circle-fill"></i> <span data-i18n="verified">Verified</span></span>
           </div>
         </div>
 
         <button class="btn-go-app" onclick="goToApp()">
           <i class="bi bi-house-fill"></i>
-          KametiApp Mein Jao
+          <span data-i18n="btn_go_app">KametiApp Mein Jao</span>
         </button>
 
         <button class="btn-logout" onclick="handleLogout()">
           <i class="bi bi-box-arrow-right"></i>
-          Logout Karein
+          <span data-i18n="btn_logout">Logout Karein</span>
         </button>
       </div>
     </div>
@@ -239,18 +239,18 @@
   <div class="modal-sheet">
     <div class="modal-handle"></div>
     <button class="modal-close" onclick="closeForgot()"><i class="bi bi-x-lg"></i></button>
-    <div class="modal-title">Password Reset 🔑</div>
-    <div class="modal-sub">Apna email daakhil karein. Hum reset link bhejenge.</div>
+    <div class="modal-title" data-i18n="forgot_title">Password Reset 🔑</div>
+    <div class="modal-sub" data-i18n="forgot_sub">Apna email daakhil karein. Hum reset link bhejenge.</div>
     <div class="form-group">
-      <label class="form-label">Email Address</label>
+      <label class="form-label" data-i18n="label_email">Email Address</label>
       <div class="input-wrap">
-        <input class="form-input" type="email" id="forgotEmail" placeholder="aapka@email.com"/>
+        <input class="form-input" type="email" id="forgotEmail" data-i18n-ph="placeholder_email" placeholder="aapka@email.com"/>
         <i class="bi bi-envelope icon"></i>
       </div>
     </div>
     <button class="btn-submit" id="forgotBtn" onclick="handleForgot()">
       <div class="spinner"></div>
-      <span class="btn-text"><i class="bi bi-send"></i> Reset Link Bhejein</span>
+      <span class="btn-text"><i class="bi bi-send"></i> <span data-i18n="btn_send_link">Reset Link Bhejein</span></span>
     </button>
   </div>
 </div>
