@@ -512,18 +512,18 @@ window.setPayFilter = setPayFilter;
 function buildWaMessage(member, committee, type) {
   const amt = formatRs(committee.monthlyAmount);
   if (type === 'late') {
-    return `Assalam o Alaikum ${member.name} bhai/sahiba! 🙏\n\n` +
-      `*${committee.name}* committee ka payment abhi tak receive nahi hua.\n\n` +
+    return `Assalam o Alaikum ${member.name} 🙏\n\n` +
+      `*${committee.name}* committee ki payment abhi tak receive nahi hui.\n\n` +
       `💰 Amount: *${amt}*\n` +
       `⚠️ Status: *Late — Fine Applicable*\n\n` +
       `Meherbani karke jald se jald payment karein. Shukriya! 🤲\n\n` +
       `_KametiApp_`;
   }
   return `Assalam o Alaikum ${member.name} bhai/sahiba! 👋\n\n` +
-    `*${committee.name}* committee ki maheena payment ki yaad dahaani:\n\n` +
+    `*${committee.name}* committee ki payment ki yaad dahaani:\n\n` +
     `💰 Amount: *${amt}*\n` +
     `📅 Status: *Pending*\n\n` +
-    `Meherbani karke payment jald karein. Jazak Allah! 🌙\n\n` +
+    `Meherbani karke payment jald se jald karein. Jazak Allah! 🌙\n\n` +
     `_KametiApp_`;
 }
 
