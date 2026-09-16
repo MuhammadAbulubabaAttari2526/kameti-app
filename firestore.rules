@@ -1,0 +1,24 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    match /users/{userId}/appData/{documentId} {
+      allow read: if isOwner(userId) && documentId == 'main';
+      allow create, update: if isOwner(userId)
+        && documentId == 'main'
+        && request.resource.data.keys().hasOnly(['committees', 'members', 'payments', 'nextId'])
+        && request.resource.data.committees is list
+        && request.resource.data.members is list
+        && request.resource.data.payments is list
+        && request.resource.data.committees.size() <= 100
+        && request.resource.data.members.size() <= 1000
+        && request.resource.data.payments.size() <= 10000
+        && request.resource.data.nextId is map;
+      allow delete: if isOwner(userId) && documentId == 'main';
+    }
+
+    function isOwner(userId) {
+      return request.auth != null && request.auth.uid == userId;
+    }
+  }
+}
